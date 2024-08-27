@@ -1,0 +1,22 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://postgres:postgres@127.0.0.1:5432/measures?schema=public"
+}
+
+enum MeasureType {
+  GAS
+  WATER
+}
+
+model Measure {
+  uuid String @id @default(uuid())
+  customer_code String
+  measure_datetime DateTime
+  measure_type MeasureType
+  has_confirmed Boolean @default(false)
+  image_url String
+}
