@@ -91,7 +91,7 @@ export class MeasureService {
       measure_datetime: measureData.measure_datetime,
       measure_type: measureData.measure_type,
       measure_value: _measure_value,
-      image_url: 'http://localhost:3000/uploads/' + imageUUID + '.png',
+      image_url: `http://localhost:${process.env.PORT}/uploads/${imageUUID}.png`,
       has_confirmed: false,
     };
 
@@ -114,7 +114,7 @@ export class MeasureService {
     if (!_measure) {
       throw new ErrorDto(
         'MEASURE_NOT_FOUND',
-        'Leitura não encontrada',
+        'Leitura não encontrada.',
         HttpStatus.NOT_FOUND,
       );
     }
