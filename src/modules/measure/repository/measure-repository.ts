@@ -16,4 +16,5 @@ export abstract class MeasureRepository {
     startDate: Date,
     endDate: Date,
   ): Promise<Array<MeasureDto>>;
+  abstract findByUUID(measure_uuid: string): Promise<MeasureDto | null>;
 }

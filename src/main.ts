@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.use(express.json({ limit: '50mb' }));
   const uploadDir = join(process.cwd(), 'uploads');
   if (!existsSync(uploadDir)) {
     mkdirSync(uploadDir);

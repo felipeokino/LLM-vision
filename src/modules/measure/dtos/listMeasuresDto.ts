@@ -6,6 +6,7 @@ class Measures {
   measure_type: MeasureType;
   image_url: string;
   has_confirmed: boolean;
+  measure_value: string;
 }
 export class ListMeasuresDTO {
   customer_code: string;

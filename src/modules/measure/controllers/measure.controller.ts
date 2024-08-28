@@ -7,8 +7,11 @@ import {
   Patch,
   Post,
   Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfirmMeasureDTO } from '../dtos/confirmMeasureDto';
 import { CreateMeasureDTO } from '../dtos/createMeasureDto';
 import { ListMeasureOptionsDTO } from '../dtos/listMeasureOptionsDto';
@@ -19,6 +22,17 @@ export class MeasureController {
   @Inject(MeasureService)
   private measureService: MeasureService;
 
+  @Post('file-upload')
+  @UseInterceptors(FileInterceptor('image'))
+  fileUpload(
+    @Body() body: Omit<CreateMeasureDTO, 'image'>,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    return this.measureService.upload({
+      ...body,
+      image: file.buffer.toString('base64'),
+    });
+  }
   @Post('upload')
   upload(@Body() body: CreateMeasureDTO) {
     return this.measureService.upload(body);

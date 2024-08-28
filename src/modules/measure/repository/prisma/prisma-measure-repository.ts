@@ -17,6 +17,7 @@ export class PrismaMeasureRepository implements MeasureRepository {
         customer_code: measure_data.customer_code,
         measure_datetime: measure_data.measure_datetime,
         measure_type: measure_data.measure_type,
+        measure_value: measure_data.measure_value,
         image_url: measure_data.image_url,
       },
     });
@@ -59,6 +60,14 @@ export class PrismaMeasureRepository implements MeasureRepository {
           gte: dateInit,
           lte: dateEnd,
         },
+      },
+    });
+  }
+
+  async findByUUID(measure_uuid: string): Promise<MeasureDto | null> {
+    return await this.prisma.measure.findUnique({
+      where: {
+        uuid: measure_uuid,
       },
     });
   }

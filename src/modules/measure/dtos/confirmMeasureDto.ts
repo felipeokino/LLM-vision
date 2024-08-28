@@ -1,4 +1,4 @@
 export class ConfirmMeasureDTO {
   'measure_uuid': string;
-  'confirmed_value': number;
+  'confirmed_value': string;
 }

@@ -1,8 +1,8 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { ErrorDto } from 'src/dto/errorDto';
-
 import { MeasureType } from '@prisma/client';
 import { endOfMonth, startOfMonth } from 'date-fns';
+import { ErrorDto } from 'src/dto/errorDto';
+
 import { ConfirmMeasureDTO } from '../dtos/confirmMeasureDto';
 import { ConfirmMeasureResponseDTO } from '../dtos/confirmMeasureResponseDto';
 import { CreateMeasureDTO } from '../dtos/createMeasureDto';
@@ -10,6 +10,7 @@ import { CreateMeasureResponseDTO } from '../dtos/createMeasureResponseDto';
 import { ListMeasureOptionsDTO } from '../dtos/listMeasureOptionsDto';
 import { ListMeasuresDTO } from '../dtos/listMeasuresDto';
 import { MeasureRepository } from '../repository/measure-repository';
+import { GeminiService } from './gemini.service';
 import { SaveImageService } from './saveImage.service';
 
 @Injectable()
@@ -19,6 +20,9 @@ export class MeasureService {
 
   @Inject(SaveImageService)
   private readonly imageService: SaveImageService;
+
+  @Inject(GeminiService)
+  private readonly geminiService: GeminiService;
 
   validateIfRegisterAlreadyExists = async (
     measureData: CreateMeasureDTO,
@@ -40,9 +44,31 @@ export class MeasureService {
     return measureList.length > 0;
   };
 
+  validateBase64Image(image: string) {
+    function launchException() {
+      throw new ErrorDto(
+        'INVALID_IMAGE',
+        'Imagem inválida',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    if (image.length % 4 !== 0) {
+      launchException();
+    }
+    // Check if the string matches the base64 pattern
+    const regex = /^[A-Za-z0-9+/]*[=]{0,2}$/;
+
+    const matches = image.match(regex);
+    if (!matches) {
+      launchException();
+    }
+  }
+
   async upload(
     measureData: CreateMeasureDTO,
   ): Promise<CreateMeasureResponseDTO> {
+    this.validateBase64Image(measureData.image);
+
     const isRegistered =
       await this.validateIfRegisterAlreadyExists(measureData);
 
@@ -54,12 +80,17 @@ export class MeasureService {
       );
     }
 
-    const imageUUID = this.imageService.createImage(measureData.image);
+    const [imageUUID, imagePath] = this.imageService.createImage(
+      measureData.image,
+    );
+
+    const _measure_value = await this.geminiService.uploadImage(imagePath);
 
     const data = {
       customer_code: measureData.customer_code,
       measure_datetime: measureData.measure_datetime,
       measure_type: measureData.measure_type,
+      measure_value: _measure_value,
       image_url: 'http://localhost:3000/uploads/' + imageUUID + '.png',
       has_confirmed: false,
     };
@@ -68,7 +99,7 @@ export class MeasureService {
 
     return {
       measure_uuid: measureUUID,
-      measure_value: 0,
+      measure_value: _measure_value,
       image_url: data.image_url,
     };
   }
@@ -99,6 +130,7 @@ export class MeasureService {
     this.prismaRepository.update({
       uuid: measureData.measure_uuid,
       has_confirmed: true,
+      measure_value: measureData.confirmed_value,
     });
     return {
       sucess: true,
@@ -140,6 +172,7 @@ export class MeasureService {
         measure_datetime: item.measure_datetime,
         measure_type: item.measure_type,
         has_confirmed: item.has_confirmed,
+        measure_value: item.measure_value,
       })),
     };
   }
