@@ -1,32 +1,17 @@
 FROM node:20-alpine
+WORKDIR /usr/src/app
 
-COPY package*.json pnpm-lock.yaml ./
+RUN ls -la
 
-# Instale as dependências do npm
+COPY . .
+COPY ./.env.docker ./.env
 
-# Se você precisar instalar pacotes globalmente, use USER root para garantir permissões apropriadas
-USER root
-
-# RUN mkdir ~/.npm-global
-
-# # Instale os pacotes globais necessários
-
-# # Defina diretório global de pacotes npm acessível ao usuário 'node'
-# RUN npm config set prefix '~/.npm-global'
-
-# # Adicione o diretório dos binários globais ao PATH e garanta que user 'node' tenha acesso
-# ENV PATH=~/.npm-global/bin:$PATH
-RUN chown -R node:node /usr/local/lib/node_modules/
-
-# USER node
+RUN mv .env .env.local
+RUN mv .env.docker .env
 
 RUN npm install -g pnpm
 RUN pnpm install
 
-# Copie o restante da aplicação para o diretório de trabalho
-COPY . .
+EXPOSE 3000
 
-# Exponha a porta que a aplicação usará
-EXPOSE 80
-
-CMD ["pnpm", "run", "start:dev"]
+CMD [ "pnpm", "run", "start:dev" ]
